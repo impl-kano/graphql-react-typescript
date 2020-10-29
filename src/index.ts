@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { MikroORM } from '@mikro-orm/core';
 import { __prod__ } from './constants';
 import mikroConfig from './mikro-orm.config';
@@ -5,6 +6,7 @@ import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import { HelloResolvers } from './resolvers/hello';
+import { PostResolvers } from './resolvers/posts';
 
 const main = async () => {
   const orm = await MikroORM.init(mikroConfig);
@@ -18,9 +20,10 @@ const main = async () => {
   /* ApolloServerの作成 */
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolvers],
+      resolvers: [HelloResolvers, PostResolvers],
       validate: false,
     }),
+    context: () => ({ em: orm.em }),
   });
 
   /* ApolloServerのミドルウェアとしてExpressを登録 */
@@ -30,13 +33,6 @@ const main = async () => {
   app.listen(4000, () => {
     console.log('----------< サーバー起動: localhost:4000 >---------- ');
   });
-
-  /* Postを作成してinsertする */
-  // const post = orm.em.create(Post, { title: 'my first post!' });
-  // await orm.em.persistAndFlush(post);
-
-  /* 全てのPOSTをクエリする */
-  // const posts = await orm.em.find(Post, {});
 };
 
 main().catch((err) => {
